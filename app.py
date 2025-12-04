@@ -35,9 +35,19 @@ def get_tweets():
     url = f"https://api.twitter.com/2/users/{USER_ID}/tweets"
     headers = {"Authorization": f"Bearer {BEARER}"}
     params = {"max_results": 5}
+    
     resp = requests.get(url, headers=headers, params=params)
+    if resp.status_code == 429:
+        print("Rate limit hit. Waiting 15 minutes before retrying once...")
+        time.sleep(15 * 60)  # wait 15 minutes
+        # retry once
+        resp = requests.get(url, headers=headers, params=params)
+        if resp.status_code == 429:
+            print("Still rate limited after retry. Exiting.")
+            return []
     resp.raise_for_status()
     return resp.json().get("data", [])
+
 
 def post_to_discord(text, url=None):
     """Send a message to Discord via webhook."""
