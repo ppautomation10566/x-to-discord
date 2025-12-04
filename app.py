@@ -39,7 +39,7 @@ def get_tweets():
     
     resp = requests.get(url, headers=headers, params=params)
     if resp.status_code == 429:
-        print("Rate limit hit. Waiting 15 minutes before retrying once...")
+        print("Rate limit hit. Waiting 15 minutes before retrying once...", flush=True)
         time.sleep(15 * 60)  # wait 15 minutes
         # retry once
         resp = requests.get(url, headers=headers, params=params)
