@@ -48,13 +48,18 @@ def get_tweets():
     resp.raise_for_status()
     return resp.json().get("data", [])
 
+def format_tweet(tweet):
+    if "entities" in tweet and "urls" in tweet["entities"]:
+        # Take the first expanded URL only
+        return tweet["entities"]["urls"][0]["expanded_url"]
+    return tweet["text"]
 
 def post_to_discord(text, url=None):
     """Send a message to Discord via webhook."""
-    payload = {"content": text}
-    if url:
-        payload["content"] += f"\n{url}"
-    requests.post(DISCORD_WEBHOOK, json=payload)
+    for tweet in tweets:
+        message = format_tweet(tweet)
+        requests.post(DISCORD_WEBHOOK, json={"content": message})
+
 
 def main():
     """Main function: fetch tweets, filter, and post to Discord."""
