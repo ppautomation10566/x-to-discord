@@ -16,6 +16,8 @@ Handles X API rate limits gracefully (waits 15 minutes before retrying).
 
 Runs on a schedule (6 AM and 6 PM Eastern) or manually via workflow dispatch.
 
+
+
 ⚙️ Setup
 
 1. Environment Variables
@@ -31,7 +33,9 @@ DISCORD_WEBHOOK → Discord webhook URL
 You can also use a local .env file for testing:
 
 X_BEARER_TOKEN=your_token_here
+
 X_USER_ID=123456789
+
 DISCORD_WEBHOOK=https://discord.com/api/webhooks/...
 
 2. Dependencies
@@ -40,15 +44,21 @@ Install required packages locally:
 
 pip install -r requirements.txt
 
+
+
 💻 Running Locally
 
 python app.py
 
 This will fetch tweets, filter them, and post to your Discord webhook.
 
+
+
 🔄 GitHub Actions Workflow
 
 The workflow (.github/workflows/run-bot.yml) runs the bot automatically.
+
+
 
 📖 Notes
 
