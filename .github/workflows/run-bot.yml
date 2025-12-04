@@ -9,6 +9,7 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+    environment: x-to-discord-env
 
     steps:
       - name: Checkout repo
