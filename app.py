@@ -15,9 +15,18 @@ USER_ID = os.getenv("X_USER_ID")  # numeric ID of target account
 if not all([BEARER, DISCORD_WEBHOOK, USER_ID]):
     raise RuntimeError("Missing required environment variables")
 
+# --- Keywords/regex filter ---
+KEYWORDS_FILE = "keywords.txt"
 
-# Keywords/regex filter
-KEYWORDS = ["leaf", "cardboard", "garbage"]
+def load_keywords():
+    """Read keywords from keywords.txt, one per line."""
+    if not os.path.exists(KEYWORDS_FILE):
+        raise RuntimeError(f"Keywords file {KEYWORDS_FILE} not found")
+    with open(KEYWORDS_FILE, "r") as f:
+        # strip whitespace, ignore empty lines
+        return [line.strip() for line in f if line.strip()]
+
+KEYWORDS = load_keywords()
 REGEX = re.compile("|".join(KEYWORDS), re.IGNORECASE)
 
 # Track last seen tweet
@@ -54,10 +63,10 @@ def get_tweets():
     return resp.json().get("data", [])
 
 def format_tweet(tweet):
-    if "entities" in tweet and "urls" in tweet["entities"]:
-        # Take the first expanded URL only
-        return tweet["entities"]["urls"][0]["expanded_url"]
-    return tweet["text"]
+    urls = tweet.get("entities", {}).get("urls", [])
+    if urls:
+        return urls[0].get("expanded_url", tweet.get("text", ""))
+    return tweet.get("text", "")
 
 def post_to_discord(message):
     """Send a message to Discord via webhook."""
@@ -74,9 +83,16 @@ def main():
         tid = tweet.get("id")
         text = tweet.get("text", "")
 
-        # Skip already-seen tweets
-        if last_seen and int(tid) <= int(last_seen):
+        if not tid:
             continue
+
+        # Skip already-seen tweets
+        try:
+            if last_seen and int(tid) <= int(last_seen):
+                continue
+        except ValueError:
+            # corrupted last_seen.txt, ignore
+            pass
 
         # Filter by keywords
         if REGEX.search(text):
@@ -84,8 +100,6 @@ def main():
             post_to_discord(expanded)
             print(f"Updating last seen to {tid}", flush=True)
             set_last_seen(tid)   # update cache after posting
-
-
 
 if __name__ == "__main__":
     main()
