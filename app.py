@@ -92,10 +92,12 @@ def main():
                 continue
         except ValueError:
             # corrupted last_seen.txt, ignore
+            print(f"Cache corrupted", flush=True)
+
             pass
 
         # Filter by keywords
-        if REGEX.search(text):
+        if int(tid) > int(last_seen) and REGEX.search(text):
             expanded = format_tweet(tweet)
             post_to_discord(expanded)
             print(f"Updating last seen to {tid}", flush=True)
