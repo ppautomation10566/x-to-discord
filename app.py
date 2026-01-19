@@ -32,17 +32,18 @@ REGEX = re.compile("|".join(KEYWORDS), re.IGNORECASE)
 # Track last seen tweet
 LAST_SEEN_FILE = "last_seen.txt"
 
+LAST_SEEN_FILE = "last_seen.txt"
+
 def get_last_seen():
-    """Read the last seen tweet ID from file."""
     if os.path.exists(LAST_SEEN_FILE):
         with open(LAST_SEEN_FILE, "r") as f:
             return f.read().strip()
     return None
 
 def set_last_seen(tweet_id):
-    """Write the last seen tweet ID to file."""
     with open(LAST_SEEN_FILE, "w") as f:
         f.write(tweet_id)
+
 
 def get_tweets():
     """Fetch recent tweets from the target user."""
@@ -74,34 +75,33 @@ def post_to_discord(message):
     if r.status_code >= 400:
         print(f"Discord post failed: {r.status_code} {r.text}", flush=True)
 
+
 def main():
-    """Main function: fetch tweets, filter, and post to Discord."""
     last_seen = get_last_seen()
+    if last_seen is None:
+        last_seen = "0"
+
+    last_seen_int = int(last_seen)
+    max_seen = last_seen_int
+
     tweets = get_tweets()
 
-    for tweet in reversed(tweets):  # oldest first
-        tid = tweet.get("id")
+    for tweet in reversed(tweets):
+        tid = int(tweet["id"])
         text = tweet.get("text", "")
 
-        if not tid:
+        if tid <= last_seen_int:
             continue
 
-        # Skip already-seen tweets
-        try:
-            if last_seen and int(tid) <= int(last_seen):
-                continue
-        except ValueError:
-            # corrupted last_seen.txt, ignore
-            print(f"Cache corrupted", flush=True)
-
-            pass
-
-        # Filter by keywords
-        if int(tid) > int(last_seen) and REGEX.search(text):
+        if REGEX.search(text):
             expanded = format_tweet(tweet)
             post_to_discord(expanded)
-            print(f"Updating last seen to {tid}", flush=True)
-            set_last_seen(tid)   # update cache after posting
+
+        if tid > max_seen:
+            max_seen = tid
+
+    set_last_seen(str(max_seen))
+
 
 if __name__ == "__main__":
     main()
