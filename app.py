@@ -109,20 +109,29 @@ def main():
 
     tweets = get_tweets()
 
-    for tweet in reversed(tweets):
+    # Sort tweets by ID so they are oldest → newest because X API doesn't guarantee order
+    tweets.sort(key=lambda t: int(t["id"]))
+
+    for tweet in tweets:
         tid = int(tweet["id"])
         text = tweet.get("text", "")
 
+        # Skip anything we've already processed
         if tid <= last_seen_int:
             continue
 
+        # Keyword match → post to Discord
         if REGEX.search(text):
             expanded = format_tweet(tweet)
             post_to_discord(expanded)
+            print(f"Matched keyword in Tweet ID {tid}", flush=True)
 
+        # Advance pointer
         if tid > max_seen:
             max_seen = tid
 
+    # Update last_seen once per run
+    print(f"Updating last_seen to {max_seen}", flush=True)
     set_last_seen(str(max_seen))
 
 
