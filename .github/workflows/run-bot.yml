@@ -2,7 +2,7 @@ name: Run X → Discord Bot
 
 on:
   schedule:
-    - cron: "0 10,22 * * *"  # 6 AM & 6 PM EDT
+    - cron: "0 23 * * *"  # 6 PM EST
   workflow_dispatch:  # <-- this enables the manual "Run workflow" button
 
 jobs:
