@@ -1,6 +1,8 @@
 import os
 import requests
 import time
+from zoneinfo import ZoneInfo
+from datetime import datetime
 import re
 from dotenv import load_dotenv
 
@@ -49,19 +51,42 @@ def get_tweets():
     """Fetch recent tweets from the target user."""
     url = f"https://api.twitter.com/2/users/{USER_ID}/tweets"
     headers = {"Authorization": f"Bearer {BEARER}"}
-    params = {"max_results": 5}
+    params = {
+        "max_results": 3,
+        "tweet.fields": "created_at"
+    }
     
     resp = requests.get(url, headers=headers, params=params)
     if resp.status_code == 429:
         print("Rate limit hit. Waiting 15 minutes before retrying once...", flush=True)
-        time.sleep(15 * 60)  # wait 15 minutes
-        # retry once
+        time.sleep(15 * 60)
+        
         resp = requests.get(url, headers=headers, params=params)
         if resp.status_code == 429:
-            print("Still rate limited after retry. Exiting.")
+            print("Still rate limited after retry. Exiting.", flush=True)
             return []
+    
     resp.raise_for_status()
-    return resp.json().get("data", [])
+    tweets = resp.json().get("data", [])
+
+    # Logging: Eastern Time timestamp + tweet ID + first 50 chars
+    for t in tweets:
+        tid = t.get("id", "UNKNOWN_ID")
+        ts_raw = t.get("created_at", None)
+
+        if ts_raw:
+            # Convert Twitter's UTC timestamp to Eastern Time
+            ts_utc = datetime.fromisoformat(ts_raw.replace("Z", "+00:00"))
+            ts_et = ts_utc.astimezone(ZoneInfo("America/New_York"))
+            ts_str = ts_et.strftime("%Y-%m-%d %H:%M:%S %Z")
+        else:
+            ts_str = "UNKNOWN_TIME"
+
+        preview = t.get("text", "")[:50].replace("\n", " ")
+        print(f"[{ts_str}] [Tweet ID {tid}] {preview}", flush=True)
+
+    return tweets
+
 
 def format_tweet(tweet):
     urls = tweet.get("entities", {}).get("urls", [])
