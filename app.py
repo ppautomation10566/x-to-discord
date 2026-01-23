@@ -34,8 +34,6 @@ REGEX = re.compile("|".join(KEYWORDS), re.IGNORECASE)
 # Track last seen tweet
 LAST_SEEN_FILE = "last_seen.txt"
 
-LAST_SEEN_FILE = "last_seen.txt"
-
 def get_last_seen():
     if os.path.exists(LAST_SEEN_FILE):
         with open(LAST_SEEN_FILE, "r") as f:
