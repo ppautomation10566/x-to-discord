@@ -2,7 +2,7 @@ name: Run X → Discord Bot
 
 on:
   schedule:
-    - cron: "0 10,22 * * *"  # 6 AM & 6 PM EDT
+    - cron: "0 23 * * *"  # 6 PM EST
   workflow_dispatch:  # <-- this enables the manual "Run workflow" button
 
 jobs:
@@ -15,10 +15,12 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Restore last_seen cache
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v4
         with:
           path: last_seen.txt
-          key: last-seen-cache
+          key: last-seen-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            last-seen-
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -36,7 +38,7 @@ jobs:
         run: python app.py
 
       - name: Save last_seen cache
-        uses: actions/cache@v3
+        uses: actions/cache/save@v4
         with:
           path: last_seen.txt
-          key: last-seen-cache
+          key: last-seen-${{ github.run_id }}-${{ github.run_attempt }}
